@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique
+  username   String
+  password   String
+  joinDate   DateTime @default(now())
+  streakDays Int      @default(0)
+  totalXp    Int      @default(0)
+
+  pomodoroConfig PomodoroConfig?
+  activities     Activity[]
+}
+
+model PomodoroConfig {
+  id                   Int  @id @default(autoincrement())
+  pomodoroMinutes      Int  @default(30)
+  shortBreakMinutes    Int  @default(5)
+  longBreakMinutes     Int  @default(15)
+  cyclesUntilLongBreak Int  @default(4)
+  autoStart            Boolean @default(false)
+
+  userId Int  @unique
+  user   User @relation(fields: [userId], references: [id])
+}
+
+model Activity {
+  id              Int      @id @default(autoincrement())
+  title           String
+  durationMinutes Int
+  date            DateTime
+  status          ActivityStatus @default(SCHEDULED)
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+enum ActivityStatus {
+  SCHEDULED
+  DONE
+  MISSED
+}
