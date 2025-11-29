@@ -1,40 +1,25 @@
-import { NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { comparePassword } from "@/lib/hash";
-import { signJwt } from "@/lib/auth";
 
-export async function POST(request: Request) {
-  const { email, password } = await request.json();
+import { setAuthCookie } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
-  const user = await prisma.user.findUnique({ where: { email } });
 
-  if (!user) {
-    return NextResponse.json(
-      { error: "Usuário não encontrado" },
-      { status: 401 }
-    );
+export async function POST(req: Request) {
+  try {
+    const { email, password } = await req.json();
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user)
+      return new Response("User not found", { status: 404 });
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid)
+      return new Response("Invalid credentials", { status: 400 });
+
+    await setAuthCookie(user.id);
+
+    return Response.json({ user });
+  } catch {
+    return new Response("Error logging in", { status: 500 });
   }
-
-  const ok = await comparePassword(password, user.password);
-  if (!ok) {
-    return NextResponse.json(
-      { error: "Credenciais inválidas" },
-      { status: 401 }
-    );
-  }
-
-  const token = signJwt({ sub: user.id, email: user.email });
-
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set({
-    name: "hellocoder_token",
-    value: token,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24,
-    path: "/"
-  });
-
-  return res;
 }

@@ -1,12 +1,10 @@
-import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export async function POST() {
-  const res = NextResponse.json({ ok: true });
-  res.cookies.set({
-    name: "hellocoder_token",
-    value: "",
+  (await cookies()).set("token", "", {
     maxAge: 0,
-    path: "/"
+    path: "/",
   });
-  return res;
+
+  return Response.json({ message: "Logged out" });
 }
