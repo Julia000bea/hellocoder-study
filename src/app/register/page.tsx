@@ -1,148 +1,112 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: FormEvent) {
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
     setLoading(true);
+    setErrorMsg("");
 
     const res = await fetch("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, username, password })
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(form),
     });
 
-    setLoading(false);
+    const data = await res.json();
 
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError(data.error || "Erro ao registrar");
+      setErrorMsg(data.error || "Falha ao registrar");
+      setLoading(false);
       return;
     }
 
-    router.push("/login");
+    router.push("/dashboard");
   }
 
   return (
-    <main
-      style={{
-        display: "flex",
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center"
-      }}
-    >
-      <div
-        style={{
-          backgroundColor: "#17162D",
-          padding: "32px",
-          borderRadius: "16px",
-          minWidth: "320px",
-          maxWidth: "400px",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.4)"
-        }}
+    <div className="flex items-center justify-center min-h-screen bg-slate-950">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm bg-slate-900 p-6 rounded-xl shadow-xl border border-slate-800"
       >
-        <h1 style={{ marginBottom: "16px", fontSize: "24px" }}>
-          Criar conta
+        <h1 className="text-2xl font-bold text-white mb-6 text-center">
+          Criar Conta
         </h1>
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <label style={{ fontSize: "14px" }}>
-            Nome de usuário
-            <input
-              type="text"
-              required
-              value={username}
-              onChange={e => setUsername(e.target.value)}
-              style={{
-                width: "100%",
-                marginTop: "4px",
-                padding: "8px 10px",
-                borderRadius: "8px",
-                border: "1px solid #374151"
-              }}
-            />
-          </label>
 
-          <label style={{ fontSize: "14px" }}>
-            E-mail
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              style={{
-                width: "100%",
-                marginTop: "4px",
-                padding: "8px 10px",
-                borderRadius: "8px",
-                border: "1px solid #374151"
-              }}
-            />
-          </label>
+        {errorMsg && (
+          <div className="text-red-400 text-sm mb-3">{errorMsg}</div>
+        )}
 
-          <label style={{ fontSize: "14px" }}>
-            Senha
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              style={{
-                width: "100%",
-                marginTop: "4px",
-                padding: "8px 10px",
-                borderRadius: "8px",
-                border: "1px solid #374151"
-              }}
-            />
-          </label>
+        <div className="mb-4">
+          <label className="text-white text-sm">Nome</label>
+          <input
+            type="text"
+            className="w-full mt-1 p-2 rounded bg-slate-800 text-white border border-slate-700"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="Seu nome"
+            required
+          />
+        </div>
 
-          {error && (
-            <p style={{ color: "#f87171", fontSize: "14px" }}>{error}</p>
-          )}
+        <div className="mb-4">
+          <label className="text-white text-sm">E-mail</label>
+          <input
+            type="email"
+            className="w-full mt-1 p-2 rounded bg-slate-800 text-white border border-slate-700"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            placeholder="seu@email.com"
+            required
+          />
+        </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              marginTop: "8px",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              backgroundColor: "#4FD1C5",
-              border: "none",
-              fontWeight: 700,
-              cursor: "pointer"
-            }}
-          >
-            {loading ? "Criando..." : "Registrar"}
-          </button>
-        </form>
+        <div className="mb-6">
+          <label className="text-white text-sm">Senha</label>
+          <input
+            type="password"
+            className="w-full mt-1 p-2 rounded bg-slate-800 text-white border border-slate-700"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            placeholder="••••••••"
+            required
+          />
+        </div>
 
         <button
-          onClick={() => router.push("/login")}
-          style={{
-            marginTop: "16px",
-            width: "100%",
-            padding: "8px",
-            borderRadius: "10px",
-            border: "1px solid #4FD1C5",
-            backgroundColor: "transparent",
-            color: "#4FD1C5",
-            cursor: "pointer"
-          }}
+          type="submit"
+          disabled={loading}
+          className="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded transition"
         >
-          Já tenho conta
+          {loading ? "Criando conta..." : "Registrar"}
         </button>
-      </div>
-    </main>
+
+        <p className="text-slate-400 text-sm text-center mt-4">
+          Já tem conta?{" "}
+          <a
+            href="/login"
+            className="text-blue-400 hover:underline"
+          >
+            Entrar
+          </a>
+        </p>
+      </form>
+    </div>
   );
 }

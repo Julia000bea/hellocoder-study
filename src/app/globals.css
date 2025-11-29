@@ -1,25 +1,26 @@
-/* Zera e fontes */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
 }
 
 body {
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #1a1d3a 0%, #2d1b3d 100%);
-  color: #fff;
-  display: flex;
-  min-height: 100vh;
-}
-
-/* Cole AQUI, literalmente, TODO o CSS que você já tinha:
-   .sidebar { ... }, .main-content { ... }, etc
-   (pode apagar o <style> anterior e trazer tudo pra cá)
-*/
-
-/* Exemplo mínimo só pra garantir que não quebra se você colar depois: */
-
-.page-section {
-  width: 100%;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
 }
