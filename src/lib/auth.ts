@@ -1,57 +1,64 @@
-import jwt from "jsonwebtoken";
+import { SignJWT, jwtVerify, type JWTPayload } from "jose";
 import { cookies } from "next/headers";
-import { prisma } from "./db";
+import { prisma } from "./prisma";
 
-const COOKIE_NAME = "hellocoder_token";
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET!);
 
-export function signJwt(payload: object) {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET not configured");
-  return jwt.sign(payload, secret, { expiresIn: "1d" });
+// -------------------------
+// JWT
+// -------------------------
+export async function generateJwt(payload: JWTPayload) {
+  return await new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setExpirationTime("7d")
+    .sign(SECRET);
 }
 
-export function verifyJwt(token: string) {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) throw new Error("JWT_SECRET not configured");
+export async function verifyJwt(token: string) {
   try {
-    return jwt.verify(token, secret) as unknown as { sub: number; email: string };
+    const { payload } = await jwtVerify(token, SECRET);
+    return payload as JWTPayload & { userId: number };
   } catch {
     return null;
   }
 }
 
-export async function getCurrentUser() {
+// -------------------------
+// COOKIES
+// -------------------------
+export async function setAuthCookie(userId: number) {
+  const token = await generateJwt({ userId });
+
   const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  if (!token) return null;
-
-  const payload = verifyJwt(token);
-  if (!payload) return null;
-
-  return prisma.user.findUnique({
-    where: { id: payload.sub }
-  });
-}
-
-export async function setAuthCookie(token: string) {
-  const cookieStore = cookies();
-  (await cookieStore).set({
-    name: COOKIE_NAME,
+  cookieStore.set({
+    name: "token",
     value: token,
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    maxAge: 60 * 60 * 24 * 7, // 7 dias
     path: "/",
-    maxAge: 60 * 60 * 24 // 1 dia
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
   });
 }
 
 export async function clearAuthCookie() {
-  const cookieStore = cookies();
-  (await cookieStore).set({
-    name: COOKIE_NAME,
-    value: "",
-    path: "/",
-    maxAge: 0
+  const cookieStore = await cookies();
+  cookieStore.delete("token");
+}
+
+// -------------------------
+// CURRENT USER
+// -------------------------
+export async function getCurrentUser() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("token")?.value;
+
+  if (!token) return null;
+
+  const decoded = await verifyJwt(token);
+  if (!decoded || !decoded.userId) return null;
+
+  return await prisma.user.findUnique({
+    where: { id: decoded.userId },
   });
 }
