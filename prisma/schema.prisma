@@ -8,43 +8,56 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique
-  username   String
-  password   String
-  joinDate   DateTime @default(now())
-  streakDays Int      @default(0)
-  totalXp    Int      @default(0)
+  id          Int           @id @default(autoincrement())
+  name        String
+  email       String        @unique
+  password    String
+  totalXp     Int           @default(0)
+  streakDays  Int           @default(0)
+  followers   Int           @default(0)
+  following   Int           @default(0)
+  createdAt   DateTime      @default(now())
 
-  pomodoroConfig PomodoroConfig?
   activities     Activity[]
-}
-
-model PomodoroConfig {
-  id                   Int  @id @default(autoincrement())
-  pomodoroMinutes      Int  @default(30)
-  shortBreakMinutes    Int  @default(5)
-  longBreakMinutes     Int  @default(15)
-  cyclesUntilLongBreak Int  @default(4)
-  autoStart            Boolean @default(false)
-
-  userId Int  @unique
-  user   User @relation(fields: [userId], references: [id])
+  reviews        Review[]
+  notifications  Notification[]
+  pomodoros      Pomodoro[]       // ✅ RELAÇÃO CORRETA
 }
 
 model Activity {
-  id              Int      @id @default(autoincrement())
-  title           String
-  durationMinutes Int
-  date            DateTime
-  status          ActivityStatus @default(SCHEDULED)
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
+  id        Int      @id @default(autoincrement())
+  title     String
+  done      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
 }
 
-enum ActivityStatus {
-  SCHEDULED
-  DONE
-  MISSED
+model Review {
+  id        Int      @id @default(autoincrement())
+  content   String
+  rating    Int
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Pomodoro {
+  id         Int      @id @default(autoincrement())
+  focusTime  Int      // minutos focados
+  breakTime  Int      // minutos de pausa
+  cycles     Int      // quantidade de ciclos
+  createdAt  DateTime @default(now())
+
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id])
 }
