@@ -2,14 +2,17 @@
   "name": "hello-coder",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
-  },
+"scripts": {
+  "dev": "next dev",
+  "build": "next build",
+  "start": "next start",
+  "lint": "eslint",
+  "prisma:generate": "prisma generate",
+  "prisma:migrate": "prisma migrate dev",
+
+  "postinstall": "prisma generate",
+  "vercel-build": "prisma generate && next build"
+},
   "dependencies": {
     "@prisma/client": "^5.16.0",
     "bcryptjs": "^2.4.3",
