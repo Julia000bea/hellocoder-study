@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,_#0f172a,_#020617)] text-slate-100 overflow-hidden">
+    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,#0f172a,#020617)] text-slate-100 overflow-hidden">
       {children}
     </div>
   );
